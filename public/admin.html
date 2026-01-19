@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Claims Queue</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: #f7fafc;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .controls {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .control-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #4a5568;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    select {
+      padding: 8px 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+      cursor: pointer;
+      min-width: 150px;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card h3 {
+      font-size: 12px;
+      color: #718096;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .stat-card .value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #2d3748;
+    }
+
+    .table-container {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead {
+      background: #f7fafc;
+    }
+
+    th {
+      text-align: left;
+      padding: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #4a5568;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    td {
+      padding: 16px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #2d3748;
+      font-size: 14px;
+    }
+
+    tbody tr:hover {
+      background: #f7fafc;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .status-submitted {
+      background: #bee3f8;
+      color: #2c5282;
+    }
+
+    .status-inReview {
+      background: #feebc8;
+      color: #7c2d12;
+    }
+
+    .status-approved {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+
+    .status-rejected {
+      background: #fed7d7;
+      color: #742a2a;
+    }
+
+    .status-select {
+      padding: 6px 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #718096;
+    }
+
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #718096;
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: none;
+      font-size: 14px;
+    }
+
+    .alert.success {
+      background: #c6f6d5;
+      color: #22543d;
+      border: 1px solid #9ae6b4;
+    }
+
+    .alert.error {
+      background: #fed7d7;
+      color: #742a2a;
+      border: 1px solid #fc8181;
+    }
+
+    .alert.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Claims Management Dashboard</h1>
+    <p>Admin Portal - Review and manage insurance claims</p>
+  </div>
+
+  <div class="container">
+    <div id="alertBox" class="alert"></div>
+
+    <div class="stats" id="stats">
+      <div class="stat-card">
+        <h3>Total Claims</h3>
+        <div class="value" id="totalClaims">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Submitted</h3>
+        <div class="value" id="submittedCount">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>In Review</h3>
+        <div class="value" id="inReviewCount">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Approved</h3>
+        <div class="value" id="approvedCount">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Rejected</h3>
+        <div class="value" id="rejectedCount">0</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Filter by Status</label>
+        <select id="statusFilter">
+          <option value="">All Statuses</option>
+          <option value="submitted">Submitted</option>
+          <option value="inReview">In Review</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Sort By</label>
+        <select id="sortBy">
+          <option value="created_at">Created Date</option>
+          <option value="date_of_occurrence">Occurrence Date</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Order</label>
+        <select id="sortOrder">
+          <option value="DESC">Newest First</option>
+          <option value="ASC">Oldest First</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Loading claims...</p>
+      </div>
+
+      <table id="claimsTable" style="display: none;">
+        <thead>
+          <tr>
+            <th>Claim ID</th>
+            <th>Policy ID</th>
+            <th>Date of Occurrence</th>
+            <th>Location</th>
+            <th>Cause</th>
+            <th>Status</th>
+            <th>Created At</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="claimsBody">
+        </tbody>
+      </table>
+
+      <div id="emptyState" class="empty-state" style="display: none;">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <h3>No claims found</h3>
+        <p>No claims match your current filters</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allClaims = [];
+
+    // Load claims on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      loadClaims();
+
+      // Add event listeners for filters
+      document.getElementById('statusFilter').addEventListener('change', loadClaims);
+      document.getElementById('sortBy').addEventListener('change', loadClaims);
+      document.getElementById('sortOrder').addEventListener('change', loadClaims);
+    });
+
+    async function loadClaims() {
+      const statusFilter = document.getElementById('statusFilter').value;
+      const sortBy = document.getElementById('sortBy').value;
+      const sortOrder = document.getElementById('sortOrder').value;
+
+      // Build query string
+      const params = new URLSearchParams();
+      if (statusFilter) params.append('status', statusFilter);
+      params.append('sortBy', sortBy);
+      params.append('sortOrder', sortOrder);
+
+      // Show loading
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('claimsTable').style.display = 'none';
+      document.getElementById('emptyState').style.display = 'none';
+
+      try {
+        const response = await fetch(`/api/claims?${params.toString()}`, {
+          headers: {
+            'x-user-id': '2' // Admin user
+          }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          allClaims = result.data;
+          displayClaims(allClaims);
+          updateStats(allClaims);
+        } else {
+          showAlert('error', result.error || 'Failed to load claims');
+        }
+      } catch (error) {
+        showAlert('error', 'Network error. Please try again.');
+      } finally {
+        document.getElementById('loading').style.display = 'none';
+      }
+    }
+
+    function displayClaims(claims) {
+      const tbody = document.getElementById('claimsBody');
+      tbody.innerHTML = '';
+
+      if (claims.length === 0) {
+        document.getElementById('emptyState').style.display = 'block';
+        return;
+      }
+
+      document.getElementById('claimsTable').style.display = 'table';
+
+      claims.forEach(claim => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><strong>#${claim.id}</strong></td>
+          <td>${claim.policy_id}</td>
+          <td>${formatDate(claim.date_of_occurrence)}</td>
+          <td>${claim.location}</td>
+          <td>${claim.cause}</td>
+          <td><span class="status-badge status-${claim.status}">${claim.status}</span></td>
+          <td>${formatDateTime(claim.created_at)}</td>
+          <td>
+            <select class="status-select" onchange="updateClaimStatus(${claim.id}, this.value)">
+              <option value="">Change Status...</option>
+              <option value="submitted" ${claim.status === 'submitted' ? 'disabled' : ''}>Submitted</option>
+              <option value="inReview" ${claim.status === 'inReview' ? 'disabled' : ''}>In Review</option>
+              <option value="approved" ${claim.status === 'approved' ? 'disabled' : ''}>Approved</option>
+              <option value="rejected" ${claim.status === 'rejected' ? 'disabled' : ''}>Rejected</option>
+            </select>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function updateStats(claims) {
+      document.getElementById('totalClaims').textContent = claims.length;
+
+      const statuses = claims.reduce((acc, claim) => {
+        acc[claim.status] = (acc[claim.status] || 0) + 1;
+        return acc;
+      }, {});
+
+      document.getElementById('submittedCount').textContent = statuses.submitted || 0;
+      document.getElementById('inReviewCount').textContent = statuses.inReview || 0;
+      document.getElementById('approvedCount').textContent = statuses.approved || 0;
+      document.getElementById('rejectedCount').textContent = statuses.rejected || 0;
+    }
+
+    async function updateClaimStatus(claimId, newStatus) {
+      if (!newStatus) return;
+
+      try {
+        const response = await fetch(`/api/claims/${claimId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': '2' // Admin user
+          },
+          body: JSON.stringify({ status: newStatus })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showAlert('success', `Claim #${claimId} status updated to ${newStatus}`);
+          loadClaims(); // Reload claims
+        } else {
+          showAlert('error', result.error || 'Failed to update claim');
+        }
+      } catch (error) {
+        showAlert('error', 'Network error. Please try again.');
+      }
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function formatDateTime(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function showAlert(type, message) {
+      const alert = document.getElementById('alertBox');
+      alert.className = `alert ${type} show`;
+      alert.textContent = message;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      setTimeout(() => {
+        alert.classList.remove('show');
+      }, 5000);
+    }
+  </script>
+</body>
+</html>

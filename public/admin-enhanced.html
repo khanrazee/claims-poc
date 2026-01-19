@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Enhanced</title>
+  <!-- AG Grid for enterprise-level data management -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31/styles/ag-grid.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31/styles/ag-theme-alpine.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f7fa;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 32px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 24px;
+    }
+
+    .header .badge {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .toolbar {
+      background: white;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .toolbar button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5568d3;
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #2d3748;
+    }
+
+    .btn-secondary:hover {
+      background: #cbd5e0;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 8px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .grid-container {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      height: 600px;
+    }
+
+    .alert {
+      padding: 14px 20px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: none;
+      font-size: 14px;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .alert.success {
+      background: #c6f6d5;
+      color: #22543d;
+      border-left: 4px solid #38a169;
+    }
+
+    .alert.error {
+      background: #fed7d7;
+      color: #742a2a;
+      border-left: 4px solid #e53e3e;
+    }
+
+    .alert.show {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .status-submitted {
+      background: #bee3f8;
+      color: #2c5282;
+    }
+
+    .status-inReview {
+      background: #feebc8;
+      color: #7c2d12;
+    }
+
+    .status-approved {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+
+    .status-rejected {
+      background: #fed7d7;
+      color: #742a2a;
+    }
+
+    /* Custom AG Grid styling */
+    .ag-theme-alpine {
+      --ag-header-background-color: #f7fafc;
+      --ag-odd-row-background-color: #ffffff;
+      --ag-header-foreground-color: #2d3748;
+      --ag-font-size: 14px;
+      --ag-selected-row-background-color: #edf2f7;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📊 Claims Management Dashboard</h1>
+    <div class="badge">Admin Portal</div>
+  </div>
+
+  <div class="container">
+    <div id="alertBox" class="alert"></div>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="🔍 Search claims by policy ID, location, or description...">
+      </div>
+      <button class="btn-secondary" onclick="refreshData()">🔄 Refresh</button>
+      <button class="btn-secondary" onclick="exportToCSV()">📥 Export CSV</button>
+    </div>
+
+    <div class="grid-container">
+      <div id="myGrid" class="ag-theme-alpine" style="height: 100%; width: 100%;"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31/dist/ag-grid-community.min.js"></script>
+  <script>
+    // AG Grid column definitions
+    const columnDefs = [
+      {
+        field: 'id',
+        headerName: 'Claim ID',
+        width: 100,
+        pinned: 'left',
+        cellRenderer: params => `<strong>#${params.value}</strong>`
+      },
+      {
+        field: 'policy_id',
+        headerName: 'Policy ID',
+        width: 130,
+        filter: 'agTextColumnFilter'
+      },
+      {
+        field: 'date_of_occurrence',
+        headerName: 'Date of Occurrence',
+        width: 160,
+        valueFormatter: params => formatDate(params.value),
+        filter: 'agDateColumnFilter',
+        sort: 'desc'
+      },
+      {
+        field: 'location',
+        headerName: 'Location',
+        width: 220,
+        filter: 'agTextColumnFilter'
+      },
+      {
+        field: 'cause',
+        headerName: 'Cause',
+        width: 150,
+        filter: 'agSetColumnFilter'
+      },
+      {
+        field: 'description',
+        headerName: 'Description',
+        width: 300,
+        filter: 'agTextColumnFilter',
+        tooltipField: 'description'
+      },
+      {
+        field: 'status',
+        headerName: 'Status',
+        width: 130,
+        cellRenderer: params => {
+          const status = params.value;
+          return `<span class="status-badge status-${status}">${status}</span>`;
+        },
+        filter: 'agSetColumnFilter',
+        filterParams: {
+          values: ['submitted', 'inReview', 'approved', 'rejected']
+        }
+      },
+      {
+        field: 'status',
+        headerName: 'Actions',
+        width: 180,
+        pinned: 'right',
+        cellRenderer: params => {
+          const statuses = ['submitted', 'inReview', 'approved', 'rejected'];
+          const options = statuses
+            .filter(s => s !== params.value)
+            .map(s => `<option value="${s}">${s}</option>`)
+            .join('');
+          return `
+            <select onchange="updateStatus(${params.data.id}, this.value)"
+                    style="padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; cursor: pointer;">
+              <option value="">Change to...</option>
+              ${options}
+            </select>
+          `;
+        }
+      },
+      {
+        field: 'created_at',
+        headerName: 'Created At',
+        width: 170,
+        valueFormatter: params => formatDateTime(params.value),
+        filter: 'agDateColumnFilter'
+      }
+    ];
+
+    // Grid options
+    const gridOptions = {
+      columnDefs: columnDefs,
+      rowData: [],
+      defaultColDef: {
+        sortable: true,
+        resizable: true,
+        filter: true,
+        floatingFilter: true
+      },
+      pagination: true,
+      paginationPageSize: 20,
+      animateRows: true,
+      rowSelection: 'multiple',
+      enableCellTextSelection: true,
+      onGridReady: params => {
+        loadClaims();
+      }
+    };
+
+    // Initialize grid
+    const gridDiv = document.querySelector('#myGrid');
+    const gridApi = agGrid.createGrid(gridDiv, gridOptions);
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+      gridApi.setGridOption('quickFilterText', e.target.value);
+    });
+
+    // Load claims data
+    async function loadClaims() {
+      try {
+        const response = await fetch('/api/claims', {
+          headers: { 'x-user-id': '2' }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          gridApi.setGridOption('rowData', result.data);
+        } else {
+          showAlert('error', result.error || 'Failed to load claims');
+        }
+      } catch (error) {
+        showAlert('error', 'Network error. Please try again.');
+      }
+    }
+
+    // Refresh data
+    function refreshData() {
+      showAlert('success', 'Refreshing data...');
+      loadClaims();
+    }
+
+    // Update claim status
+    async function updateStatus(claimId, newStatus) {
+      if (!newStatus) return;
+
+      try {
+        const response = await fetch(`/api/claims/${claimId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': '2'
+          },
+          body: JSON.stringify({ status: newStatus })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showAlert('success', `✓ Claim #${claimId} updated to ${newStatus}`);
+          loadClaims();
+        } else {
+          showAlert('error', result.error || 'Failed to update claim');
+        }
+      } catch (error) {
+        showAlert('error', 'Network error. Please try again.');
+      }
+    }
+
+    // Export to CSV
+    function exportToCSV() {
+      gridApi.exportDataAsCsv({
+        fileName: `claims_export_${new Date().toISOString().split('T')[0]}.csv`
+      });
+      showAlert('success', '✓ CSV exported successfully');
+    }
+
+    // Utility functions
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function formatDateTime(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function showAlert(type, message) {
+      const alert = document.getElementById('alertBox');
+      const icon = type === 'success' ? '✓' : '⚠';
+      alert.className = `alert ${type} show`;
+      alert.innerHTML = `<strong>${icon}</strong> ${message}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      setTimeout(() => {
+        alert.classList.remove('show');
+      }, 4000);
+    }
+  </script>
+</body>
+</html>

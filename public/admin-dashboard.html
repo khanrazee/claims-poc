@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Claims Management</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31/styles/ag-grid.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31/styles/ag-theme-alpine.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f7fa;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 32px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 { font-size: 24px; }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn-logout {
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .btn-logout:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .container { max-width: 1600px; margin: 0 auto; padding: 24px; }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      background: white;
+      padding: 8px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .tab {
+      padding: 12px 24px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: #4a5568;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .toolbar {
+      background: white;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      padding: 10px 20px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .btn-primary:hover { background: #5568d3; }
+
+    .search-box {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 10px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .grid-container {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      height: 600px;
+    }
+
+    .alert {
+      padding: 14px 20px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: none;
+      font-size: 14px;
+    }
+
+    .alert.success {
+      background: #c6f6d5;
+      color: #22543d;
+      border-left: 4px solid #38a169;
+    }
+
+    .alert.error {
+      background: #fed7d7;
+      color: #742a2a;
+      border-left: 4px solid #e53e3e;
+    }
+
+    .alert.show { display: block; }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.show { display: flex; }
+
+    .modal-content {
+      background: white;
+      border-radius: 8px;
+      padding: 32px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-content h2 {
+      margin-bottom: 20px;
+      color: #2d3748;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #4a5568;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    .btn-secondary {
+      padding: 10px 20px;
+      background: #e2e8f0;
+      color: #2d3748;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .invite-link {
+      background: #f7fafc;
+      padding: 12px;
+      border-radius: 6px;
+      word-break: break-all;
+      font-family: monospace;
+      font-size: 12px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Admin Dashboard</h1>
+    <div class="user-info">
+      <span id="userName">Loading...</span>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="alertBox" class="alert"></div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('claims')">Claims Management</button>
+      <button class="tab" onclick="switchTab('users')">User Management</button>
+      <button class="tab" onclick="switchTab('policies')">Policies</button>
+    </div>
+
+    <!-- Claims Tab -->
+    <div id="claimsTab" class="tab-content active">
+      <div class="toolbar">
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <select id="statusFilter" style="padding: 10px 16px; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 14px; min-width: 150px;">
+            <option value="">All Statuses</option>
+            <option value="submitted">Submitted</option>
+            <option value="inReview">In Review</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <div class="search-box">
+            <input type="text" id="claimsSearch" placeholder="🔍 Search claims...">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="refreshClaims()">🔄 Refresh</button>
+      </div>
+
+      <div class="grid-container">
+        <div id="claimsGrid" class="ag-theme-alpine" style="height: 100%; width: 100%;"></div>
+      </div>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="usersTab" class="tab-content">
+      <div class="toolbar">
+        <button class="btn-primary" onclick="showCreateUserModal()">➕ Create User</button>
+        <div class="search-box">
+          <input type="text" id="usersSearch" placeholder="🔍 Search users...">
+        </div>
+        <button class="btn-primary" onclick="refreshUsers()">🔄 Refresh</button>
+      </div>
+
+      <div class="grid-container">
+        <div id="usersGrid" class="ag-theme-alpine" style="height: 100%; width: 100%;"></div>
+      </div>
+    </div>
+
+    <!-- Policies Tab -->
+    <div id="policiesTab" class="tab-content">
+      <div class="toolbar">
+        <button class="btn-primary" onclick="showCreatePolicyModal()">➕ Create Policy</button>
+        <button class="btn-primary" onclick="refreshPolicies()">🔄 Refresh</button>
+      </div>
+
+      <div class="grid-container">
+        <div id="policiesGrid" class="ag-theme-alpine" style="height: 100%; width: 100%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create User Modal -->
+  <div id="createUserModal" class="modal">
+    <div class="modal-content">
+      <h2>Create New User</h2>
+      <form id="createUserForm">
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="userEmail" required>
+        </div>
+        <div class="form-group">
+          <label>First Name</label>
+          <input type="text" id="userFirstName">
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input type="text" id="userLastName">
+        </div>
+        <div class="form-group">
+          <label>Role *</label>
+          <select id="userRole" required onchange="togglePolicyField()">
+            <option value="customer">Customer</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-group" id="policyFieldContainer">
+          <label>Policy * (Required for Customers)</label>
+          <select id="userPolicy" required>
+            <option value="">Select a policy...</option>
+          </select>
+        </div>
+        <div id="inviteLinkContainer" style="display: none;">
+          <label>Invite Link (send this to the user):</label>
+          <div class="invite-link" id="inviteLink"></div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="closeCreateUserModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Create User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Update Status Modal -->
+  <div id="updateStatusModal" class="modal">
+    <div class="modal-content">
+      <h2>Update Claim Status</h2>
+      <p style="margin-bottom: 20px; color: #718096; font-size: 14px;">
+        💡 Add notes separately using the "Notes" button for this claim.
+      </p>
+      <form id="updateStatusForm">
+        <div class="form-group">
+          <label>New Status *</label>
+          <select id="newStatus" required></select>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="closeUpdateStatusModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Update Status</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Documents Modal -->
+  <div id="documentsModal" class="modal">
+    <div class="modal-content">
+      <h2>Claim Documents</h2>
+      <div id="documentsList" style="margin: 20px 0;">
+        <!-- Documents will be populated here -->
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" onclick="closeDocumentsModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Policy Modal -->
+  <div id="createPolicyModal" class="modal">
+    <div class="modal-content">
+      <h2>Create New Policy</h2>
+      <form id="createPolicyForm">
+        <div class="form-group">
+          <label>Policy Name *</label>
+          <input type="text" id="policyName" required>
+        </div>
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea id="policyDescription" required style="min-height: 100px;"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Status *</label>
+          <select id="policyStatus" required>
+            <option value="draft">Draft</option>
+            <option value="active">Active</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Effective Date *</label>
+          <input type="date" id="policyEffectiveDate" required>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="closeCreatePolicyModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Create Policy</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31/dist/ag-grid-community.min.js"></script>
+  <script>
+    let currentUser = null;
+    let claimsGridApi = null;
+    let usersGridApi = null;
+    let policiesGridApi = null;
+    let agents = [];
+    let policies = [];
+    let currentClaimId = null;
+
+    // Check authentication on load
+    async function checkAuth() {
+      try {
+        const response = await fetch('/api/auth/me', { credentials: 'include' });
+        const result = await response.json();
+
+        if (!result.success || result.data.role !== 'admin') {
+          window.location.href = '/login';
+          return;
+        }
+
+        currentUser = result.data;
+        document.getElementById('userName').textContent = `${result.data.firstName} ${result.data.lastName}`;
+
+        await loadAgents();
+        await loadPolicies();
+        initClaimsGrid();
+        initUsersGrid();
+        initPoliciesGrid();
+        await refreshClaims();
+      } catch (error) {
+        window.location.href = '/login';
+      }
+    }
+
+    async function loadAgents() {
+      try {
+        const response = await fetch('/api/users/agents', { credentials: 'include' });
+        const result = await response.json();
+        if (result.success) {
+          agents = result.data;
+        }
+      } catch (error) {
+        console.error('Failed to load agents:', error);
+      }
+    }
+
+    async function loadPolicies() {
+      try {
+        const response = await fetch('/api/policies/active', { credentials: 'include' });
+        const result = await response.json();
+        if (result.success) {
+          policies = result.data;
+        }
+      } catch (error) {
+        console.error('Failed to load policies:', error);
+      }
+    }
+
+    function initClaimsGrid() {
+      const columnDefs = [
+        { field: 'id', headerName: 'ID', width: 80, pinned: 'left' },
+        { field: 'policy_id', headerName: 'Policy ID', width: 130 },
+        { field: 'customer_first_name', headerName: 'Customer', width: 150,
+          valueGetter: params => `${params.data.customer_first_name || ''} ${params.data.customer_last_name || ''}`.trim() || params.data.customer_email
+        },
+        { field: 'date_of_occurrence', headerName: 'Date', width: 120 },
+        { field: 'location', headerName: 'Location', width: 200 },
+        { field: 'cause', headerName: 'Cause', width: 130 },
+        { field: 'status', headerName: 'Status', width: 120,
+          cellRenderer: params => `<span style="padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; background: ${getStatusColor(params.value)};">${params.value}</span>`
+        },
+        { field: 'agent_first_name', headerName: 'Assigned Agent', width: 150,
+          valueGetter: params => params.data.agent_first_name ? `${params.data.agent_first_name} ${params.data.agent_last_name}` : 'Unassigned',
+          cellRenderer: params => {
+            const options = agents.map(a => `<option value="${a.id}" ${params.data.assigned_agent_id == a.id ? 'selected' : ''}>${a.first_name} ${a.last_name}</option>`).join('');
+            return `<select onchange="assignAgent(${params.data.id}, this.value)" style="padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+              <option value="">Unassigned</option>
+              ${options}
+            </select>`;
+          }
+        },
+        { field: 'updated_by_first_name', headerName: 'Last Updated By', width: 150,
+          valueGetter: params => params.data.updated_by_first_name ? `${params.data.updated_by_first_name} ${params.data.updated_by_last_name}` : '-'
+        },
+        { field: 'documents', headerName: 'Documents', width: 150,
+          cellRenderer: params => {
+            const docs = params.data.documents || [];
+            if (docs.length === 0) {
+              return '<span style="color: #a0aec0;">No documents</span>';
+            }
+            return `<button onclick="showDocuments(${params.data.id}, ${JSON.stringify(docs).replace(/"/g, '&quot;')})" style="padding: 4px 12px; background: #3182ce; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">📎 ${docs.length} file${docs.length > 1 ? 's' : ''}</button>`;
+          }
+        },
+        { headerName: 'Actions', width: 260, pinned: 'right',
+          cellRenderer: params => `
+            <button onclick="window.open('/claim-notes.html?claimId=${params.data.id}', '_blank')" style="padding: 4px 12px; margin-right: 4px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">💬 Notes</button>
+            <button onclick="showUpdateStatusModal(${params.data.id}, '${params.data.status}')" style="padding: 4px 12px; margin-right: 4px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Update Status</button>
+          `
+        }
+      ];
+
+      const gridOptions = {
+        columnDefs,
+        rowData: [],
+        defaultColDef: {
+          sortable: true,
+          filter: true,
+          resizable: true
+        },
+        onGridReady: params => {
+          claimsGridApi = params.api;
+        }
+      };
+
+      const gridDiv = document.querySelector('#claimsGrid');
+      agGrid.createGrid(gridDiv, gridOptions);
+
+      // Backend search with debounce
+      let searchTimeout;
+      document.getElementById('claimsSearch').addEventListener('input', e => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          refreshClaims();
+        }, 500); // 500ms debounce
+      });
+
+      // Backend filter by status
+      document.getElementById('statusFilter').addEventListener('change', () => {
+        refreshClaims();
+      });
+    }
+
+    function initUsersGrid() {
+      const columnDefs = [
+        { field: 'id', headerName: 'ID', width: 80 },
+        { field: 'email', headerName: 'Email', width: 250 },
+        { field: 'first_name', headerName: 'First Name', width: 150 },
+        { field: 'last_name', headerName: 'Last Name', width: 150 },
+        { field: 'role', headerName: 'Role', width: 120 },
+        { field: 'is_active', headerName: 'Status', width: 120,
+          cellRenderer: params => params.value ? '<span style="color: #38a169;">Active</span>' : '<span style="color: #e53e3e;">Inactive</span>'
+        },
+        { field: 'created_at', headerName: 'Created', width: 180 }
+      ];
+
+      const gridOptions = {
+        columnDefs,
+        rowData: [],
+        defaultColDef: {
+          sortable: true,
+          filter: true,
+          resizable: true
+        },
+        onGridReady: params => {
+          usersGridApi = params.api;
+        }
+      };
+
+      const gridDiv = document.querySelector('#usersGrid');
+      agGrid.createGrid(gridDiv, gridOptions);
+
+      document.getElementById('usersSearch').addEventListener('input', e => {
+        usersGridApi.setGridOption('quickFilterText', e.target.value);
+      });
+    }
+
+    function initPoliciesGrid() {
+      const columnDefs = [
+        { field: 'id', headerName: 'ID', width: 80 },
+        { field: 'name', headerName: 'Policy Name', width: 250 },
+        { field: 'description', headerName: 'Description', width: 350 },
+        { field: 'status', headerName: 'Status', width: 120,
+          cellRenderer: params => {
+            const colors = { active: '#38a169', draft: '#ed8936', cancelled: '#e53e3e' };
+            return `<span style="color: ${colors[params.value]}; font-weight: 600;">${params.value.toUpperCase()}</span>`;
+          }
+        },
+        { field: 'effective_at_date', headerName: 'Effective Date', width: 150 },
+        { field: 'created_by_first_name', headerName: 'Created By', width: 180,
+          valueGetter: params => `${params.data.created_by_first_name || ''} ${params.data.created_by_last_name || ''}`.trim()
+        },
+        { field: 'created_at', headerName: 'Created', width: 180 }
+      ];
+
+      const gridOptions = {
+        columnDefs,
+        rowData: [],
+        defaultColDef: {
+          sortable: true,
+          filter: true,
+          resizable: true
+        },
+        onGridReady: params => {
+          policiesGridApi = params.api;
+        }
+      };
+
+      const gridDiv = document.querySelector('#policiesGrid');
+      agGrid.createGrid(gridDiv, gridOptions);
+    }
+
+    async function refreshClaims() {
+      try {
+        const search = document.getElementById('claimsSearch').value;
+        const status = document.getElementById('statusFilter').value;
+
+        // Build query string
+        const params = new URLSearchParams();
+        if (search) params.append('search', search);
+        if (status) params.append('status', status);
+
+        const url = `/api/claims${params.toString() ? '?' + params.toString() : ''}`;
+        const response = await fetch(url, { credentials: 'include' });
+        const result = await response.json();
+
+        if (result.success && claimsGridApi) {
+          claimsGridApi.setGridOption('rowData', result.data);
+        }
+      } catch (error) {
+        showAlert('error', 'Failed to load claims');
+      }
+    }
+
+    async function refreshUsers() {
+      try {
+        const response = await fetch('/api/users', { credentials: 'include' });
+        const result = await response.json();
+        if (result.success && usersGridApi) {
+          usersGridApi.setGridOption('rowData', result.data);
+        }
+      } catch (error) {
+        showAlert('error', 'Failed to load users');
+      }
+    }
+
+    async function refreshPolicies() {
+      try {
+        const response = await fetch('/api/policies', { credentials: 'include' });
+        const result = await response.json();
+        if (result.success && policiesGridApi) {
+          policiesGridApi.setGridOption('rowData', result.data);
+        }
+      } catch (error) {
+        showAlert('error', 'Failed to load policies');
+      }
+    }
+
+    function showCreatePolicyModal() {
+      document.getElementById('createPolicyModal').classList.add('show');
+    }
+
+    function closeCreatePolicyModal() {
+      document.getElementById('createPolicyModal').classList.remove('show');
+      document.getElementById('createPolicyForm').reset();
+    }
+
+    document.getElementById('createPolicyForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const policyData = {
+        name: document.getElementById('policyName').value,
+        description: document.getElementById('policyDescription').value,
+        status: document.getElementById('policyStatus').value,
+        effectiveAtDate: document.getElementById('policyEffectiveDate').value
+      };
+
+      try {
+        const response = await fetch('/api/policies', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(policyData)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          showAlert('success', 'Policy created successfully');
+          closeCreatePolicyModal();
+          await loadPolicies();
+          refreshPolicies();
+        } else {
+          showAlert('error', result.error);
+        }
+      } catch (error) {
+        showAlert('error', 'Failed to create policy');
+      }
+    });
+
+    async function assignAgent(claimId, agentId) {
+      try {
+        const response = await fetch(`/api/claims/${claimId}/assign`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ agentId: agentId || null })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          showAlert('success', 'Agent assigned successfully');
+          refreshClaims();
+        } else {
+          showAlert('error', result.error);
+        }
+      } catch (error) {
+        showAlert('error', 'Failed to assign agent');
+      }
+    }
+
+    async function showUpdateStatusModal(claimId, currentStatus) {
+      currentClaimId = claimId;
+
+      try {
+        const response = await fetch(`/api/claims/${claimId}/transitions`, { credentials: 'include' });
+        const result = await response.json();
+
+        if (result.success) {
+          const select = document.getElementById('newStatus');
+          select.innerHTML = '<option value="">Select new status</option>' +
+            result.data.map(s => `<option value="${s}">${s}</option>`).join('');
+
+          document.getElementById('updateStatusModal').classList.add('show');
+        }
+      } catch (error) {
+        showAlert('error', 'Failed to load transitions');
+      }
+    }
+
+    function closeUpdateStatusModal() {
+      document.getElementById('updateStatusModal').classList.remove('show');
+      document.getElementById('updateStatusForm').reset();
+      currentClaimId = null;
+    }
+
+    function showDocuments(claimId, documents) {
+      const docsList = document.getElementById('documentsList');
+
+      if (!documents || documents.length === 0) {
+        docsList.innerHTML = '<p style="color: #a0aec0; text-align: center;">No documents attached to this claim.</p>';
+      } else {
+        docsList.innerHTML = '<div style="display: flex; flex-direction: column; gap: 12px;">' +
+          documents.map(doc => {
+            const fileName = doc.split('-').slice(1).join('-') || doc;
+            const fileExt = doc.split('.').pop().toLowerCase();
+            const icon = ['jpg', 'jpeg', 'png', 'gif'].includes(fileExt) ? '🖼️' :
+                        fileExt === 'pdf' ? '📄' : '📎';
+            return `
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f7fafc; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <span style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 20px;">${icon}</span>
+                  <span style="font-size: 14px; color: #2d3748;">${fileName}</span>
+                </span>
+                <div style="display: flex; gap: 8px;">
+                  <a href="/uploads/${doc}" target="_blank" style="padding: 6px 12px; background: #3182ce; color: white; text-decoration: none; border-radius: 4px; font-size: 12px;">👁️ View</a>
+                  <a href="/uploads/${doc}" download style="padding: 6px 12px; background: #38a169; color: white; text-decoration: none; border-radius: 4px; font-size: 12px;">⬇️ Download</a>
+                </div>
+              </div>
+            `;
+          }).join('') +
+        '</div>';
+      }
+
+      document.getElementById('documentsModal').classList.add('show');
+    }
+
+    function closeDocumentsModal() {
+      document.getElementById('documentsModal').classList.remove('show');
+    }
+
+    document.getElementById('updateStatusForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const status = document.getElementById('newStatus').value;
+
+      try {
+        const response = await fetch(`/api/claims/${currentClaimId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ status })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          showAlert('success', 'Status updated successfully. Add notes via the Notes button if needed.');
+          closeUpdateStatusModal();
+          refreshClaims();
+        } else {
+          showAlert('error', result.error);
+        }
+      } catch (error) {
+        showAlert('error', 'Failed to update status');
+      }
+    });
+
+    function showCreateUserModal() {
+      document.getElementById('createUserModal').classList.add('show');
+      document.getElementById('inviteLinkContainer').style.display = 'none';
+      togglePolicyField(); // Populate policy dropdown based on selected role
+    }
+
+    function closeCreateUserModal() {
+      document.getElementById('createUserModal').classList.remove('show');
+      document.getElementById('createUserForm').reset();
+      document.getElementById('inviteLinkContainer').style.display = 'none';
+      togglePolicyField(); // Reset policy field visibility
+    }
+
+    function togglePolicyField() {
+      const role = document.getElementById('userRole').value;
+      const policyContainer = document.getElementById('policyFieldContainer');
+      const policySelect = document.getElementById('userPolicy');
+
+      if (role === 'customer') {
+        policyContainer.style.display = 'block';
+        policySelect.required = true;
+        // Populate policy dropdown
+        policySelect.innerHTML = '<option value="">Select a policy...</option>' +
+          policies.filter(p => p.status === 'active')
+            .map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+      } else {
+        policyContainer.style.display = 'none';
+        policySelect.required = false;
+      }
+    }
+
+    document.getElementById('createUserForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const userData = {
+        email: document.getElementById('userEmail').value,
+        firstName: document.getElementById('userFirstName').value,
+        lastName: document.getElementById('userLastName').value,
+        role: document.getElementById('userRole').value
+      };
+
+      // Add policyId for customers
+      if (userData.role === 'customer') {
+        userData.policyId = parseInt(document.getElementById('userPolicy').value);
+      }
+
+      try {
+        const response = await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(userData)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          showAlert('success', 'User created successfully');
+          document.getElementById('inviteLink').textContent = result.data.inviteLink;
+          document.getElementById('inviteLinkContainer').style.display = 'block';
+          refreshUsers();
+        } else {
+          showAlert('error', result.error);
+        }
+      } catch (error) {
+        showAlert('error', 'Failed to create user');
+      }
+    });
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+      event.target.classList.add('active');
+      document.getElementById(tab + 'Tab').classList.add('active');
+
+      if (tab === 'users') {
+        refreshUsers();
+      } else if (tab === 'policies') {
+        refreshPolicies();
+      } else {
+        refreshClaims();
+      }
+    }
+
+    async function logout() {
+      try {
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+        window.location.href = '/login';
+      } catch (error) {
+        window.location.href = '/login';
+      }
+    }
+
+    function showAlert(type, message) {
+      const alert = document.getElementById('alertBox');
+      alert.className = `alert ${type} show`;
+      alert.textContent = message;
+      setTimeout(() => alert.classList.remove('show'), 5000);
+    }
+
+    function getStatusColor(status) {
+      const colors = {
+        'submitted': '#bee3f8',
+        'inReview': '#feebc8',
+        'approved': '#c6f6d5',
+        'rejected': '#fed7d7',
+        'cancelled': '#e2e8f0'
+      };
+      return colors[status] || '#e2e8f0';
+    }
+
+    // Initialize
+    checkAuth();
+  </script>
+</body>
+</html>

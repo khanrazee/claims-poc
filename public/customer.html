@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Insurance Claim</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 40px;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .policy-info {
+      background: #f0f4ff;
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 30px;
+      color: #5a67d8;
+      font-weight: 500;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .required {
+      color: #e53e3e;
+    }
+
+    input[type="date"],
+    input[type="text"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+      font-family: inherit;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .file-upload {
+      border: 2px dashed #cbd5e0;
+      border-radius: 6px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .file-upload:hover {
+      border-color: #667eea;
+      background: #f7fafc;
+    }
+
+    .file-upload input {
+      display: none;
+    }
+
+    .file-list {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #4a5568;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .alert {
+      padding: 16px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .alert.success {
+      background: #c6f6d5;
+      color: #22543d;
+      border: 1px solid #9ae6b4;
+    }
+
+    .alert.error {
+      background: #fed7d7;
+      color: #742a2a;
+      border: 1px solid #fc8181;
+    }
+
+    .alert.show {
+      display: block;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .loading.show {
+      display: block;
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Submit Insurance Claim</h1>
+    <div class="policy-info" id="policyInfo">Policy: Loading...</div>
+
+    <div id="alertBox" class="alert"></div>
+
+    <form id="claimForm">
+      <div class="form-group">
+        <label for="dateOfOccurrence">
+          Date of Occurrence <span class="required">*</span>
+        </label>
+        <input type="date" id="dateOfOccurrence" name="dateOfOccurrence" required>
+      </div>
+
+      <div class="form-group">
+        <label for="location">
+          Location <span class="required">*</span>
+        </label>
+        <input type="text" id="location" name="location" placeholder="Enter location where incident occurred" required>
+      </div>
+
+      <div class="form-group">
+        <label for="cause">
+          Cause of Occurrence <span class="required">*</span>
+        </label>
+        <select id="cause" name="cause" required>
+          <option value="">Select cause</option>
+          <option value="Accident">Accident</option>
+          <option value="Theft">Theft</option>
+          <option value="Damage">Damage</option>
+          <option value="Delay-Interruption">Delay-Interruption</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="description">
+          Description <span class="required">*</span>
+        </label>
+        <textarea id="description" name="description" placeholder="Provide detailed description of the incident" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Documents (Optional)</label>
+        <div class="file-upload" onclick="document.getElementById('documents').click()">
+          <input type="file" id="documents" name="documents" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+          <div>📎 Click to upload documents</div>
+          <small style="color: #718096; margin-top: 8px; display: block;">Supported: JPG, PNG, PDF, DOC (Max 5MB each)</small>
+        </div>
+        <div id="fileList" class="file-list"></div>
+      </div>
+
+      <button type="submit" class="btn" id="submitBtn">Submit Claim</button>
+    </form>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p style="margin-top: 12px; color: #718096;">Submitting your claim...</p>
+    </div>
+  </div>
+
+  <script>
+    // Get policy ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const policyId = urlParams.get('policyId') || 'POL-12345';
+    document.getElementById('policyInfo').textContent = `Policy: ${policyId}`;
+
+    // File upload handling
+    document.getElementById('documents').addEventListener('change', function(e) {
+      const fileList = document.getElementById('fileList');
+      const files = Array.from(e.target.files);
+
+      if (files.length > 0) {
+        fileList.innerHTML = '<strong>Selected files:</strong><br>' +
+          files.map(f => `• ${f.name} (${(f.size / 1024).toFixed(1)} KB)`).join('<br>');
+      } else {
+        fileList.innerHTML = '';
+      }
+    });
+
+    // Form submission
+    document.getElementById('claimForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const formData = new FormData();
+      formData.append('policyId', policyId);
+      formData.append('dateOfOccurrence', document.getElementById('dateOfOccurrence').value);
+      formData.append('location', document.getElementById('location').value);
+      formData.append('cause', document.getElementById('cause').value);
+      formData.append('description', document.getElementById('description').value);
+
+      // Add files
+      const files = document.getElementById('documents').files;
+      for (let file of files) {
+        formData.append('documents', file);
+      }
+
+      // Show loading state
+      document.getElementById('submitBtn').disabled = true;
+      document.getElementById('loading').classList.add('show');
+      hideAlert();
+
+      try {
+        const response = await fetch('/api/claims', {
+          method: 'POST',
+          headers: {
+            'x-user-id': '1' // Customer user
+          },
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showAlert('success', `Claim submitted successfully! Claim ID: ${result.data.id}`);
+          document.getElementById('claimForm').reset();
+          document.getElementById('fileList').innerHTML = '';
+        } else {
+          showAlert('error', result.error || 'Failed to submit claim');
+        }
+      } catch (error) {
+        showAlert('error', 'Network error. Please try again.');
+      } finally {
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('loading').classList.remove('show');
+      }
+    });
+
+    function showAlert(type, message) {
+      const alert = document.getElementById('alertBox');
+      alert.className = `alert ${type} show`;
+      alert.textContent = message;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function hideAlert() {
+      const alert = document.getElementById('alertBox');
+      alert.classList.remove('show');
+    }
+
+    // Set max date to today
+    document.getElementById('dateOfOccurrence').max = new Date().toISOString().split('T')[0];
+  </script>
+</body>
+</html>
